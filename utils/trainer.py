@@ -2,47 +2,86 @@ import os
 import torch
 import torch.optim as optim
 import torch.nn as nn
-from torchvision import transforms
+import torch.nn.functional as F
 from torchvision.utils import save_image, make_grid
 import matplotlib.pyplot as plt
-from PIL import Image
 
 
-def train_autoencoder(model, dataloader, num_epochs=5, learning_rate=0.001, device='cpu'):
+def train_autoencoder(model, dataloader, num_epochs=5, learning_rate=0.001, device='cpu', start_epoch=0, optimizer=None, ae_type='ae'):
     criterion = nn.MSELoss()
-    optimizer = optim.Adam(model.parameters(), lr=learning_rate)
+    if optimizer is None:
+        optimizer = optim.Adam(model.parameters(), lr=learning_rate)
 
-    for epoch in range(num_epochs):
+    for epoch in range(start_epoch, num_epochs):
         for data in dataloader:
             img = data.to(device)
-            img = img.view(img.size(0), -1)
-            output = model(img)
-            loss = criterion(output, img)
+
+            if ae_type not in ['conv', 'conv_vae']:
+                img = img.view(img.size(0), -1)
+
+            if ae_type in ['vae', 'conv_vae']:
+                recon_x, mu, log_var = model(img)
+                loss = loss_function_vae(recon_x, img, mu, log_var)
+            else:
+                output = model(img)
+                loss = criterion(output, img)
 
             optimizer.zero_grad()
             loss.backward()
             optimizer.step()
 
         print(f'Epoch [{epoch + 1}/{num_epochs}], Loss: {loss.item():.4f}')
+        save_checkpoint(model, optimizer, epoch, './autoencoder_checkpoint.pth')
 
     return model
 
 
-def visualize_reconstructions(model, dataloader, num_samples=10, device='cpu', save_path="./samples"):
+def loss_function_vae(recon_x, x, mu, log_var):
+    BCE = F.binary_cross_entropy(recon_x, x, reduction='sum')
+    KLD = -0.5 * torch.sum(1 + log_var - mu.pow(2) - log_var.exp())
+    return BCE + KLD
+
+
+def evaluate_autoencoder(model, dataloader, device, ae_type):
+    model.eval()
+    total_loss = 0
+    criterion = nn.MSELoss()
+    with torch.no_grad():
+        for data in dataloader:
+            img = data.to(device)
+
+            if ae_type not in ['conv', 'conv_vae']:
+                img = img.view(img.size(0), -1)
+
+            if ae_type in ['vae', 'conv_vae']:
+                output, _, _ = model(img)
+            else:
+                output = model(img)
+            loss = criterion(output, img)
+            total_loss += loss.item()
+
+    return total_loss / len(dataloader)
+
+
+def visualize_reconstructions(model, dataloader, num_samples=10, device='cpu', save_path="./samples", ae_type='ae'):
     model.eval()
     samples = next(iter(dataloader))
     samples = samples[:num_samples].to(device)
-    samples = samples.view(samples.size(0), -1)
-    reconstructions = model(samples)
+
+    if ae_type not in ['conv', 'conv_vae']:
+        samples = samples.view(samples.size(0), -1)
+    
+    if ae_type in ['vae', 'conv_vae']:
+        reconstructions, _, _ = model(samples)
+    else:
+        reconstructions = model(samples)
 
     samples = samples.view(-1, 3, 64, 64)
     reconstructions = reconstructions.view(-1, 3, 64, 64)
 
-    # Combine as amostras e reconstruções em uma única grade
     combined = torch.cat([samples, reconstructions], dim=0)
     grid_img = make_grid(combined, nrow=num_samples)
 
-    # Visualização usando Matplotlib
     plt.imshow(grid_img.permute(1, 2, 0).cpu().detach().numpy())
     plt.axis('off')
     plt.show()
@@ -62,15 +101,18 @@ def load_model(model, path, device):
     return model
 
 
-def evaluate_autoencoder(model, dataloader, device):
-    model.eval()
-    total_loss = 0
-    criterion = nn.MSELoss()
-    with torch.no_grad():
-        for data in dataloader:
-            img = data.to(device)
-            img = img.view(img.size(0), -1)
-            output = model(img)
-            loss = criterion(output, img)
-            total_loss += loss.item()
-    return total_loss / len(dataloader)
+def save_checkpoint(model, optimizer, epoch, path):
+    checkpoint = {
+        'epoch': epoch,
+        'model_state_dict': model.state_dict(),
+        'optimizer_state_dict': optimizer.state_dict(),
+    }
+    torch.save(checkpoint, path)
+
+
+def load_checkpoint(model, optimizer, path, device):
+    checkpoint = torch.load(path, map_location=device)
+    model.load_state_dict(checkpoint['model_state_dict'])
+    optimizer.load_state_dict(checkpoint['optimizer_state_dict'])
+    epoch = checkpoint['epoch']
+    return model, optimizer, epoch + 1
