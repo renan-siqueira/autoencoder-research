@@ -4,6 +4,7 @@ __pycache__
 
 samples
 
+*.pth
 *.png
 *.jpg
 *.jpeg
