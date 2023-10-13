@@ -6,10 +6,12 @@ This project aims to provide a foundational structure to understand, train, and 
 
 ## Features
 
-- Train an autoencoder on your dataset of images.
+- Train various autoencoder architectures: standard, convolutional, variational, and convolutional variational autoencoder on your dataset of images.
 - Visualize the reconstructions of the autoencoder.
 - Evaluate the model on a separate validation set.
-- Save and load model functionality.
+- Checkpointing: Ability to save and resume training from checkpoints.
+- Save and load trained model weights.
+- Utilize custom datasets by simply pointing to your directory.
 
 ## Getting Started
 
@@ -44,4 +46,4 @@ pip install -r requirements.txt
 python run.py
 ```
 
-By default, this will train a new model. If you wish to use a pre-trained model, modify the main method in run.py.
+By default, this will train a new model. If you wish to use a pre-trained model, modify the `main` method in `run.py`.
