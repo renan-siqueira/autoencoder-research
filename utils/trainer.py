@@ -7,7 +7,37 @@ from torchvision.utils import save_image, make_grid
 import matplotlib.pyplot as plt
 
 
-def train_autoencoder(model, dataloader, num_epochs, learning_rate, device, start_epoch, optimizer, ae_type):
+def save_model(model, path):
+    torch.save(model.state_dict(), path)
+
+
+def load_model(model, path, device):
+    model.load_state_dict(torch.load(path, map_location=device))
+    model.eval()
+    return model
+
+
+def save_checkpoint_file(model, optimizer, epoch, path):
+    checkpoint = {
+        'epoch': epoch,
+        'model_state_dict': model.state_dict(),
+        'optimizer_state_dict': optimizer.state_dict(),
+    }
+    torch.save(checkpoint, path)
+
+
+def load_checkpoint(model, optimizer, path, device):
+    checkpoint = torch.load(path, map_location=device)
+    model.load_state_dict(checkpoint['model_state_dict'])
+    optimizer.load_state_dict(checkpoint['optimizer_state_dict'])
+    epoch = checkpoint['epoch']
+    return model, optimizer, epoch + 1
+
+
+def train_autoencoder(
+        model, dataloader, num_epochs, learning_rate, device,
+        start_epoch, optimizer, ae_type, save_checkpoint
+    ):
     criterion = nn.MSELoss()
     if optimizer is None:
         optimizer = optim.Adam(model.parameters(), lr=learning_rate)
@@ -31,7 +61,8 @@ def train_autoencoder(model, dataloader, num_epochs, learning_rate, device, star
             optimizer.step()
 
         print(f'Epoch [{epoch + 1}/{num_epochs}], Loss: {loss.item():.4f}')
-        save_checkpoint(model, optimizer, epoch, './autoencoder_checkpoint.pth')
+        if save_checkpoint:
+            save_checkpoint_file(model, optimizer, epoch, './autoencoder_checkpoint.pth')
 
     return model
 
@@ -63,7 +94,7 @@ def evaluate_autoencoder(model, dataloader, device, ae_type):
     return total_loss / len(dataloader)
 
 
-def visualize_reconstructions(model, dataloader, num_samples=10, device='cpu', save_path="./samples", ae_type='ae'):
+def visualize_reconstructions(model, dataloader, num_samples=10, device='cpu', save_path="./samples", ae_type='ae', resolution=64):
     model.eval()
     samples = next(iter(dataloader))
     samples = samples[:num_samples].to(device)
@@ -76,8 +107,8 @@ def visualize_reconstructions(model, dataloader, num_samples=10, device='cpu', s
     else:
         reconstructions = model(samples)
 
-    samples = samples.view(-1, 3, 64, 64)
-    reconstructions = reconstructions.view(-1, 3, 64, 64)
+    samples = samples.view(-1, 3, resolution, resolution)
+    reconstructions = reconstructions.view(-1, 3, resolution, resolution)
 
     combined = torch.cat([samples, reconstructions], dim=0)
     grid_img = make_grid(combined, nrow=num_samples)
@@ -89,30 +120,3 @@ def visualize_reconstructions(model, dataloader, num_samples=10, device='cpu', s
     if not os.path.exists(save_path):
         os.makedirs(save_path)
     save_image(grid_img, os.path.join(save_path, 'combined_samples.png'))
-
-
-def save_model(model, path):
-    torch.save(model.state_dict(), path)
-
-
-def load_model(model, path, device):
-    model.load_state_dict(torch.load(path, map_location=device))
-    model.eval()
-    return model
-
-
-def save_checkpoint(model, optimizer, epoch, path):
-    checkpoint = {
-        'epoch': epoch,
-        'model_state_dict': model.state_dict(),
-        'optimizer_state_dict': optimizer.state_dict(),
-    }
-    torch.save(checkpoint, path)
-
-
-def load_checkpoint(model, optimizer, path, device):
-    checkpoint = torch.load(path, map_location=device)
-    model.load_state_dict(checkpoint['model_state_dict'])
-    optimizer.load_state_dict(checkpoint['optimizer_state_dict'])
-    epoch = checkpoint['epoch']
-    return model, optimizer, epoch + 1
