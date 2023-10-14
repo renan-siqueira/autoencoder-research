@@ -7,7 +7,7 @@ from torchvision.utils import save_image, make_grid
 import matplotlib.pyplot as plt
 
 
-def train_autoencoder(model, dataloader, num_epochs=5, learning_rate=0.001, device='cpu', start_epoch=0, optimizer=None, ae_type='ae'):
+def train_autoencoder(model, dataloader, num_epochs, learning_rate, device, start_epoch, optimizer, ae_type):
     criterion = nn.MSELoss()
     if optimizer is None:
         optimizer = optim.Adam(model.parameters(), lr=learning_rate)
