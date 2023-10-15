@@ -1,13 +1,11 @@
 import os
-import torch
-from torchvision import datasets, transforms
 from torchvision.transforms import ToTensor, Resize, Compose
 from torch.utils.data import DataLoader, Dataset
 from PIL import Image
 
 
-def get_dataloader(data_path, batch_size):
-    dataset = CustomDataset(data_path)
+def get_dataloader(data_path, batch_size, resolution):
+    dataset = CustomDataset(data_path, resolution)
 
     dataloader = DataLoader(
         dataset,
@@ -19,12 +17,12 @@ def get_dataloader(data_path, batch_size):
 
 
 class CustomDataset(Dataset):
-    def __init__(self, data_path):
+    def __init__(self, data_path, resolution):
         self.data_path = data_path
         self.image_files = os.listdir(data_path)
 
         self.transforms = Compose([
-            Resize((64, 64)),
+            Resize((resolution, resolution)),
             ToTensor()
         ])
 

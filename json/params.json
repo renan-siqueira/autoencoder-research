@@ -1,0 +1,9 @@
+{
+    "batch_size": 32,
+    "resolution": 64,
+    "encoding_dim": 16,
+    "num_epochs": 1000,
+    "learning_rate": 0.001,
+    "ae_type": "conv",
+    "save_checkpoint": null
+}
