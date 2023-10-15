@@ -1,4 +1,5 @@
 from .autoencoder import Autoencoder
 from .convolutional_autoencoder import ConvolutionalAutoencoder
 from .convolutional_vae import ConvolutionalVAE
+from .denoising_autoencoder import DenoisingAutoencoder
 from .variational_autoencoder import VariationalAutoencoder

@@ -6,14 +6,37 @@ import time
 import numpy as np
 import torch
 
-from models import Autoencoder, ConvolutionalAutoencoder, ConvolutionalVAE, VariationalAutoencoder
+from models import (
+    Autoencoder,
+    ConvolutionalAutoencoder,
+    ConvolutionalVAE,
+    DenoisingAutoencoder,
+    VariationalAutoencoder,
+)
+
 from settings import settings
 from utils.dataloader import get_dataloader
 from utils.trainer import train_autoencoder, visualize_reconstructions, load_checkpoint, evaluate_autoencoder
 from utils import utils
 
 
-def set_seed(seed=42):
+def get_model_by_type(ae_type, input_dim, encoding_dim, device):
+    models = {
+        'ae': lambda: Autoencoder(input_dim, encoding_dim),
+        'conv': ConvolutionalAutoencoder,
+        'conv_vae': ConvolutionalVAE,
+        'dae': lambda: DenoisingAutoencoder(input_dim, encoding_dim),
+        'vae': VariationalAutoencoder,
+    }
+
+    if ae_type not in models:
+        raise ValueError(f"Unknown AE type: {ae_type}")
+
+    model = models[ae_type]()
+    return model.to(device)
+
+
+def set_seed(seed):
     torch.manual_seed(seed)
     torch.cuda.manual_seed_all(seed)
     np.random.seed(seed)
@@ -46,17 +69,7 @@ def main(load_trained_model):
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     dataloader = get_dataloader(settings.DATA_PATH, batch_size, resolution)
 
-    if ae_type == 'ae':
-        model = Autoencoder(input_dim, encoding_dim).to(device)
-    elif ae_type == 'conv':
-        model = ConvolutionalAutoencoder().to(device)
-    elif ae_type == 'vae':
-        model = VariationalAutoencoder().to(device)
-    elif ae_type == 'conv_vae':
-        model = ConvolutionalVAE().to(device)
-    else:
-        raise ValueError(f"Unknown AE type: {ae_type}")
-
+    model = get_model_by_type(ae_type, input_dim, encoding_dim, device)
     optimizer = torch.optim.Adam(model.parameters())
 
     start_epoch = 0
