@@ -2,7 +2,7 @@
 
 A simple implementation of an autoencoder using PyTorch. 
 
-This project aims to provide a foundational structure to understand, train, and evaluate autoencoders on 64x64 images.
+This project aims to provide a basic framework for understanding, training and evaluating autoencoders on any image size.
 
 ## Features
 
@@ -25,25 +25,15 @@ This project aims to provide a foundational structure to understand, train, and 
 
 ### Installation
 
-1. Clone the repository:
-
-```bash
-git clone https://github.com/renan-siqueira/autoencoder-project.git
-```
-2. Navigate to the project directory and install the required libraries:
-
-```bash
-cd autoencoder-project
-pip install -r requirements.txt
-```
+1. Clone the repository.
+2. Navigate to the project directory and install the required libraries.
 
 ## Usage
 
-1. Modify settings/settings.py to point to your training and validation dataset.
-2. To train the autoencoder, simply run:
+1. Modify the `settings/settings.py` file to point to your training and validation dataset.
+2. Modify the `json/params.json` file to reflext your training preferences. 
+3. To train the autoencoder, simply run:
 
 ```bash
 python run.py
 ```
-
-By default, this will train a new model. If you wish to use a pre-trained model, modify the `main` method in `run.py`.
