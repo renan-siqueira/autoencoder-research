@@ -12,8 +12,10 @@ from models import (
     ConvolutionalAutoencoder,
     ConvolutionalVAE,
     DenoisingAutoencoder,
+    SparseAutoencoder,
     VariationalAutoencoder,
     DenoisingConvolutionalAutoencoder,
+    SparseConvolutionalAutoencoder
 )
 
 from settings import settings
@@ -26,12 +28,14 @@ def get_model_by_type(ae_type=None, input_dim=None, encoding_dim=None, device=No
     models = {
         'ae': lambda: Autoencoder(input_dim, encoding_dim),
         'dae': lambda: DenoisingAutoencoder(input_dim, encoding_dim),
+        'sparse': lambda: SparseAutoencoder(input_dim, encoding_dim),
         'vae': VariationalAutoencoder,
         'conv': ConvolutionalAutoencoder,
         'conv_dae': DenoisingConvolutionalAutoencoder,
         'conv_vae': ConvolutionalVAE,
+        'conv_sparse': SparseConvolutionalAutoencoder,
     }
-    
+
     if ae_type is None:
         return list(models.keys())
 
@@ -81,15 +85,15 @@ def main(load_trained_model, ae_type=None, num_epochs=5, test_mode=True):
     model = get_model_by_type(ae_type, input_dim, encoding_dim, device)
     optimizer = torch.optim.Adam(model.parameters())
 
-    start_epoch = 0
-    if os.path.exists(settings.PATH_SAVED_MODEL):
-        model, optimizer, start_epoch = load_checkpoint(
-            model, optimizer, settings.PATH_SAVED_MODEL, device
-        )
-        print(f"Loaded checkpoint and continuing training from epoch {start_epoch}.")
-
     try:
         if not load_trained_model:
+            start_epoch = 1
+            if os.path.exists(settings.PATH_SAVED_MODEL):
+                model, optimizer, start_epoch = load_checkpoint(
+                    model, optimizer, settings.PATH_SAVED_MODEL, device
+                )
+                print(f"Loaded checkpoint and continuing training from epoch {start_epoch}.")
+
             start_time = time.time()
 
             train_autoencoder(
@@ -100,7 +104,8 @@ def main(load_trained_model, ae_type=None, num_epochs=5, test_mode=True):
                 device=device,
                 start_epoch=start_epoch,
                 optimizer=optimizer,
-                save_checkpoint=save_checkpoint
+                save_checkpoint=save_checkpoint,
+                ae_type=ae_type
             )
 
             elapsed_time = utils.format_time(time.time() - start_time)
@@ -112,12 +117,12 @@ def main(load_trained_model, ae_type=None, num_epochs=5, test_mode=True):
 
     if not test_mode:
         valid_dataloader = get_dataloader(settings.VALID_DATA_PATH, batch_size, resolution)
-        avg_valid_loss = evaluate_autoencoder(model, valid_dataloader, device, ae_type)
+        avg_valid_loss = evaluate_autoencoder(model, valid_dataloader, device)
         print(f"\nAverage validation loss: {avg_valid_loss:.4f}\n")
 
         visualize_reconstructions(
             model, valid_dataloader, num_samples=10,
-            device=device, ae_type=ae_type, resolution=resolution
+            device=device, resolution=resolution
         )
 
 
