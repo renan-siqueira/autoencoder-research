@@ -1,8 +1,8 @@
 # Autoencoder Project
 
-A simple implementation of an autoencoder using PyTorch. 
+A simple implementation of an autoencoder using PyTorch.
 
-This project aims to provide a basic framework for understanding, training and evaluating autoencoders on any image size.
+This project aims to provide a basic framework for understanding, training, and evaluating autoencoders on any image size.
 
 ## Features
 
@@ -12,6 +12,7 @@ This project aims to provide a basic framework for understanding, training and e
 - Checkpointing: Ability to save and resume training from checkpoints.
 - Save and load trained model weights.
 - Utilize custom datasets by simply pointing to your directory.
+- Test all available autoencoder architectures with a single command.
 
 ## Getting Started
 
@@ -31,9 +32,22 @@ This project aims to provide a basic framework for understanding, training and e
 ## Usage
 
 1. Modify the `settings/settings.py` file to point to your training and validation dataset.
-2. Modify the `json/params.json` file to reflext your training preferences. 
-3. To train the autoencoder, simply run:
+2. Modify the `json/params.json` file to reflect your training preferences.
+
+### Training
+
+To train the autoencoder as per your configurations, simply run:
 
 ```bash
 python run.py
 ```
+
+### Testing
+
+To run a test routine for all the available autoencoder architectures, use:
+
+```bash
+python run.py --test
+```
+
+This will train each autoencoder for a few epochs and provide an overview of their performances.
