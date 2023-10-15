@@ -4,8 +4,10 @@ import torch
 
 class DenoisingAutoencoder(nn.Module):
     def __init__(self, input_dim, encoding_dim):
-        print('***** Denoising Autoencoder input_dim:', input_dim)
         super(DenoisingAutoencoder, self).__init__()
+
+        self.model_structure = 'linear'
+        self.model_variant = 'vanilla'
 
         self.encoder = nn.Sequential(
             nn.Linear(input_dim, 1024),

@@ -3,8 +3,11 @@ import torch.nn as nn
 
 class Autoencoder(nn.Module):
     def __init__(self, input_dim, encoding_dim):
-        print('***** Autoencoder input_dim:', input_dim)
         super(Autoencoder, self).__init__()
+
+        self.model_structure = 'linear'
+        self.model_variant = 'vanilla'
+
         self.encoder = nn.Sequential(
             nn.Linear(input_dim, 1024),
             nn.ReLU(),
@@ -18,6 +21,7 @@ class Autoencoder(nn.Module):
             nn.ReLU(),
             nn.Linear(64, encoding_dim)
         )
+
         self.decoder = nn.Sequential(
             nn.Linear(encoding_dim, 64),
             nn.ReLU(),
