@@ -3,13 +3,13 @@ import torch.nn as nn
 import torch.nn.functional as F
 
 
-class ConvolutionalAutoencoder(nn.Module):
+class DenoisingConvolutionalAutoencoder(nn.Module):
     def __init__(self):
-        super(ConvolutionalAutoencoder, self).__init__()
+        super(DenoisingConvolutionalAutoencoder, self).__init__()
 
         self.model_structure = 'convolutional'
         self.model_variant = 'vanilla'
-
+        
         # Encoder
         self.enc0 = nn.Conv2d(3, 256, kernel_size=3, padding=1)
         self.enc1 = nn.Conv2d(256, 128, kernel_size=3, padding=1)
@@ -26,15 +26,21 @@ class ConvolutionalAutoencoder(nn.Module):
         self.dec4 = nn.ConvTranspose2d(256, 3, kernel_size=2, stride=2)
 
     def forward(self, x):
-        x, _ = self.pool(F.relu(self.enc0(x)))
+        noise = torch.randn_like(x) * 0.1
+        x_corrupted = x + noise
+
+        # Encoder
+        x, _ = self.pool(F.relu(self.enc0(x_corrupted)))
         x, _ = self.pool(F.relu(self.enc1(x)))
         x, _ = self.pool(F.relu(self.enc2(x)))
         x, _ = self.pool(F.relu(self.enc3(x)))
         x, _ = self.pool(F.relu(self.enc4(x)))
 
+        # Decoder
         x = F.relu(self.dec0(x))
         x = F.relu(self.dec1(x))
         x = F.relu(self.dec2(x))
         x = F.relu(self.dec3(x))
         x = torch.sigmoid(self.dec4(x))
+
         return x

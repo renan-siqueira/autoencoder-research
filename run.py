@@ -2,18 +2,47 @@ import os
 import json
 import random
 import time
+import argparse
 
 import numpy as np
 import torch
 
-from models import Autoencoder, ConvolutionalAutoencoder, ConvolutionalVAE, VariationalAutoencoder
+from models import (
+    Autoencoder,
+    ConvolutionalAutoencoder,
+    ConvolutionalVAE,
+    DenoisingAutoencoder,
+    VariationalAutoencoder,
+    DenoisingConvolutionalAutoencoder,
+)
+
 from settings import settings
 from utils.dataloader import get_dataloader
 from utils.trainer import train_autoencoder, visualize_reconstructions, load_checkpoint, evaluate_autoencoder
 from utils import utils
 
 
-def set_seed(seed=42):
+def get_model_by_type(ae_type=None, input_dim=None, encoding_dim=None, device=None):
+    models = {
+        'ae': lambda: Autoencoder(input_dim, encoding_dim),
+        'dae': lambda: DenoisingAutoencoder(input_dim, encoding_dim),
+        'vae': VariationalAutoencoder,
+        'conv': ConvolutionalAutoencoder,
+        'conv_dae': DenoisingConvolutionalAutoencoder,
+        'conv_vae': ConvolutionalVAE,
+    }
+    
+    if ae_type is None:
+        return list(models.keys())
+
+    if ae_type not in models:
+        raise ValueError(f"Unknown AE type: {ae_type}")
+
+    model = models[ae_type]()
+    return model.to(device)
+
+
+def set_seed(seed):
     torch.manual_seed(seed)
     torch.cuda.manual_seed_all(seed)
     np.random.seed(seed)
@@ -28,17 +57,20 @@ def load_params(path):
     return params
 
 
-def main(load_trained_model):
+def main(load_trained_model, ae_type=None, num_epochs=5, test_mode=True):
     set_seed(1)
     params = load_params(settings.PATH_PARAMS_JSON)
 
     batch_size = params["batch_size"]
     resolution = params["resolution"]
     encoding_dim = params["encoding_dim"]
-    num_epochs = params["num_epochs"]
     learning_rate = params.get("learning_rate", 0.001)
-    ae_type = params["ae_type"]
     save_checkpoint = params["save_checkpoint"]
+
+    if not ae_type:
+        ae_type = params["ae_type"]
+        num_epochs = params["num_epochs"]
+        test_mode = False
 
     # Calculate input_dim based on resolution
     input_dim = 3 * resolution * resolution
@@ -46,17 +78,7 @@ def main(load_trained_model):
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     dataloader = get_dataloader(settings.DATA_PATH, batch_size, resolution)
 
-    if ae_type == 'ae':
-        model = Autoencoder(input_dim, encoding_dim).to(device)
-    elif ae_type == 'conv':
-        model = ConvolutionalAutoencoder().to(device)
-    elif ae_type == 'vae':
-        model = VariationalAutoencoder().to(device)
-    elif ae_type == 'conv_vae':
-        model = ConvolutionalVAE().to(device)
-    else:
-        raise ValueError(f"Unknown AE type: {ae_type}")
-
+    model = get_model_by_type(ae_type, input_dim, encoding_dim, device)
     optimizer = torch.optim.Adam(model.parameters())
 
     start_epoch = 0
@@ -78,25 +100,39 @@ def main(load_trained_model):
                 device=device,
                 start_epoch=start_epoch,
                 optimizer=optimizer,
-                ae_type=ae_type,
                 save_checkpoint=save_checkpoint
             )
 
             elapsed_time = utils.format_time(time.time() - start_time)
             print(f"\nTraining took {elapsed_time}")
             print(f"Training complete up to epoch {num_epochs}!")
-    
+
     except KeyboardInterrupt:
         print("\nTraining interrupted by user.")
 
-    valid_dataloader = get_dataloader(settings.VALID_DATA_PATH, batch_size, resolution)
-    avg_valid_loss = evaluate_autoencoder(model, valid_dataloader, device, ae_type)
-    print(f"\nAverage validation loss: {avg_valid_loss:.4f}\n")
+    if not test_mode:
+        valid_dataloader = get_dataloader(settings.VALID_DATA_PATH, batch_size, resolution)
+        avg_valid_loss = evaluate_autoencoder(model, valid_dataloader, device, ae_type)
+        print(f"\nAverage validation loss: {avg_valid_loss:.4f}\n")
 
-    visualize_reconstructions(
-        model, valid_dataloader, num_samples=10, device=device, ae_type=ae_type, resolution=resolution
-    )
+        visualize_reconstructions(
+            model, valid_dataloader, num_samples=10,
+            device=device, ae_type=ae_type, resolution=resolution
+        )
 
 
 if __name__ == "__main__":
-    main(False)
+    parser = argparse.ArgumentParser(description='Training and testing autoencoders.')
+    parser.add_argument(
+        '--test', action='store_true', help='Run the test routine for all autoencoders.'
+    )
+
+    args = parser.parse_args()
+
+    if args.test:
+        ae_types = get_model_by_type()
+        for ae_type in ae_types:
+            print(f"\n===== Training {ae_type} =====\n")
+            main(load_trained_model=False, ae_type=ae_type)
+    else:
+        main(load_trained_model=False)

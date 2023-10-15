@@ -36,7 +36,7 @@ def load_checkpoint(model, optimizer, path, device):
 
 def train_autoencoder(
         model, dataloader, num_epochs, learning_rate, device,
-        start_epoch, optimizer, ae_type, save_checkpoint
+        start_epoch, optimizer, save_checkpoint
     ):
     criterion = nn.MSELoss()
     if optimizer is None:
@@ -46,10 +46,10 @@ def train_autoencoder(
         for data in dataloader:
             img = data.to(device)
 
-            if ae_type not in ['conv', 'conv_vae']:
+            if model.model_structure == 'linear':
                 img = img.view(img.size(0), -1)
 
-            if ae_type in ['vae', 'conv_vae']:
+            if model.model_variant == 'vae':
                 recon_x, mu, log_var = model(img)
                 loss = loss_function_vae(recon_x, img, mu, log_var)
             else:
@@ -81,7 +81,7 @@ def evaluate_autoencoder(model, dataloader, device, ae_type):
         for data in dataloader:
             img = data.to(device)
 
-            if ae_type not in ['conv', 'conv_vae']:
+            if model.model_structure == 'linear':
                 img = img.view(img.size(0), -1)
 
             if ae_type in ['vae', 'conv_vae']:
@@ -99,10 +99,10 @@ def visualize_reconstructions(model, dataloader, num_samples=10, device='cpu', s
     samples = next(iter(dataloader))
     samples = samples[:num_samples].to(device)
 
-    if ae_type not in ['conv', 'conv_vae']:
+    if model.model_structure == 'linear':
         samples = samples.view(samples.size(0), -1)
     
-    if ae_type in ['vae', 'conv_vae']:
+    if model.model_variant == 'vae':
         reconstructions, _, _ = model(samples)
     else:
         reconstructions = model(samples)
