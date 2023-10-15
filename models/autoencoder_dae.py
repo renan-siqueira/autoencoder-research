@@ -1,9 +1,10 @@
 import torch.nn as nn
+import torch
 
 
-class Autoencoder(nn.Module):
+class DenoisingAutoencoder(nn.Module):
     def __init__(self, input_dim, encoding_dim):
-        super(Autoencoder, self).__init__()
+        super(DenoisingAutoencoder, self).__init__()
 
         self.model_structure = 'linear'
         self.model_variant = 'vanilla'
@@ -38,6 +39,10 @@ class Autoencoder(nn.Module):
         )
 
     def forward(self, x):
-        x = self.encoder(x)
-        x = self.decoder(x)
-        return x
+        noise = torch.randn_like(x) * 0.1
+        x_corrupted = x + noise
+
+        x_encoded = self.encoder(x_corrupted)
+        x_decoded = self.decoder(x_encoded)
+
+        return x_decoded

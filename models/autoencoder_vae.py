@@ -7,6 +7,9 @@ class VariationalAutoencoder(nn.Module):
     def __init__(self, encoding_dim=128):
         super(VariationalAutoencoder, self).__init__()
 
+        self.model_structure = 'linear'
+        self.model_variant = 'vae'
+
         # Encoder
         self.enc1 = nn.Linear(3 * 64 * 64, 512)
         self.enc2 = nn.Linear(512, 256)

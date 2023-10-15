@@ -7,6 +7,9 @@ class ConvolutionalVAE(nn.Module):
     def __init__(self):
         super(ConvolutionalVAE, self).__init__()
 
+        self.model_structure = 'convolutional'
+        self.model_variant = 'vae'
+
         # Encoder
         self.enc1 = nn.Conv2d(3, 64, kernel_size=3, padding=1)
         self.enc2 = nn.Conv2d(64, 32, kernel_size=3, padding=1)
