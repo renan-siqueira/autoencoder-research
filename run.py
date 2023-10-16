@@ -140,4 +140,4 @@ if __name__ == "__main__":
             print(f"\n===== Training {ae_type} =====\n")
             main(load_trained_model=False, ae_type=ae_type)
     else:
-        main(load_trained_model=False)
+        main(load_trained_model=False, num_epochs=100)
