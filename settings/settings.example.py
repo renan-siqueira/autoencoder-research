@@ -8,6 +8,4 @@ PATH_PARAMS_JSON = './json/params.json'
 COPY_SOURCE_FOLDER = '__source_images_folder_path__'
 
 TRAIN_PERCENTAGE = 0.7
-VALID_PERCENTAGE = 0.3
-
 COPY_FIXED_NUMBER_TO_COPY = 32

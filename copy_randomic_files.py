@@ -2,49 +2,48 @@ import os
 import shutil
 import random
 
-from settings.settings import (
-    COPY_DESTINATION_FOLDER,
-    COPY_SOURCE_FOLDER,
-    COPY_PERCENTAGE_TO_COPY,
-    COPY_RANDOM_MODE,
-    COPY_FIXED_NUMBER_TO_COPY
-)
+from settings.settings import COPY_SOURCE_FOLDER, DATA_PATH, COPY_FIXED_NUMBER_TO_COPY, TRAIN_PERCENTAGE
 
 
 def copy_files(
         source_folder,
-        destination_folder,
-        percentage=None,
-        fixed_number=None,
+        dataset_folder,
+        fixed_number,
         random_mode=True
     ):
 
     files = [file_name for file_name in os.listdir(source_folder)
              if os.path.isfile(os.path.join(source_folder, file_name))]
 
-    if percentage is not None:
-        total_to_copy = int(len(files) * percentage / 100)
-    elif fixed_number is not None:
-        total_to_copy = min(fixed_number, len(files))
-    else:
-        raise ValueError("Either percentage or fixed_number must be provided!")
+    total_to_copy = min(fixed_number, len(files))
 
     if random_mode:
         chosen_files = random.sample(files, total_to_copy)
     else:
         chosen_files = files[:total_to_copy]
 
-    for file_name in chosen_files:
-        shutil.copy2(os.path.join(source_folder, file_name), destination_folder)
+    # Splitting the chosen files for train and validation
+    num_train = int(TRAIN_PERCENTAGE * total_to_copy)
+    train_files = chosen_files[:num_train]
+    valid_files = chosen_files[num_train:]
 
-    print(f"{total_to_copy} files have been copied from {source_folder} to {destination_folder}.")
+    # Define train and valid destination folders
+    train_destination_folder = os.path.join(dataset_folder, 'train')
+    valid_destination_folder = os.path.join(dataset_folder, 'valid')
+
+    for file_name in train_files:
+        shutil.copy2(os.path.join(source_folder, file_name), train_destination_folder)
+    for file_name in valid_files:
+        shutil.copy2(os.path.join(source_folder, file_name), valid_destination_folder)
+
+    print(f"{num_train} files have been copied from {source_folder} to {train_destination_folder}.")
+    print(f"{total_to_copy - num_train} files have been copied from {source_folder} to {valid_destination_folder}.")
 
 
 if __name__ == '__main__':
     copy_files(
         COPY_SOURCE_FOLDER,
-        COPY_DESTINATION_FOLDER,
-        percentage=COPY_PERCENTAGE_TO_COPY,
+        DATA_PATH,
         fixed_number=COPY_FIXED_NUMBER_TO_COPY,
-        random_mode=COPY_RANDOM_MODE
+        random_mode=True
     )
