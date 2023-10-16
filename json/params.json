@@ -1,9 +1,9 @@
 {
     "batch_size": 32,
-    "resolution": 64,
+    "resolution": 128,
     "encoding_dim": 16,
-    "num_epochs": 10,
+    "num_epochs": 25,
     "learning_rate": 0.0001,
-    "ae_type": "vae",
+    "ae_type": "conv_dae",
     "save_checkpoint": null
 }
