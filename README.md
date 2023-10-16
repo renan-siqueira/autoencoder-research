@@ -24,6 +24,7 @@ This project aims to provide a basic framework for understanding, training, and 
 - torchvision
 - PIL
 - matplotlib
+- NVIDIA CUDA-compatible GPU (if you're using the GPU-support Docker setup)
 - Docker (if you want to containerize the application)
 
 ### Installation
@@ -45,7 +46,7 @@ docker build -t autoencoder_research .
 
 4. Run the container:
 ```bash
-docker run -it --rm -v $(pwd):/app autoencoder_research bash
+docker run --gpus all -it --rm -v $(pwd):/app autoencoder_research bash
 ```
 
 **Note:** If you're using the Docker method, you'll be inside the container's shell after running the above command. You can execute Python scripts or any other commands just like you would on your local machine.
@@ -60,7 +61,7 @@ docker run -it --rm -v $(pwd):/app autoencoder_research bash
 To train the autoencoder as per your configurations, simply run:
 
 ```bash
-python run.py
+python3 run.py
 ```
 
 ### Testing
@@ -68,7 +69,7 @@ python run.py
 To run a test routine for all the available autoencoder architectures, use:
 
 ```bash
-python run.py --test
+python3 run.py --test
 ```
 
 This will train each autoencoder for a few epochs and provide an overview of their performances.
@@ -96,5 +97,5 @@ lowercase_path=$(echo $win_path | tr '[:upper:]' '[:lower:]' | sed 's|\\|/|g')
 3. Use this path in your Docker command:
 
 ```bash
-docker run -it --rm -v "/$lowercase_path":/app autoencoder_research bash
+docker run --gpus all -it --rm -v "/$lowercase_path":/app autoencoder_research bash
 ```
