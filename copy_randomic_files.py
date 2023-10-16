@@ -2,7 +2,7 @@ import os
 import shutil
 import random
 
-from settings.settings import COPY_SOURCE_FOLDER, DATA_PATH, COPY_FIXED_NUMBER_TO_COPY, TRAIN_PERCENTAGE
+from settings.settings import COPY_SOURCE_FOLDER, DATASET_FOLDER, COPY_FIXED_NUMBER_TO_COPY, TRAIN_PERCENTAGE
 
 
 def copy_files(
@@ -43,7 +43,7 @@ def copy_files(
 if __name__ == '__main__':
     copy_files(
         COPY_SOURCE_FOLDER,
-        DATA_PATH,
+        DATASET_FOLDER,
         fixed_number=COPY_FIXED_NUMBER_TO_COPY,
         random_mode=True
     )
