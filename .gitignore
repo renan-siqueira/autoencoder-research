@@ -3,7 +3,6 @@
 __pycache__
 
 samples
-params.json
 
 *.pth
 *.png
