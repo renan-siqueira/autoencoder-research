@@ -2,16 +2,15 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
-
 class VariationalAutoencoder(nn.Module):
-    def __init__(self, encoding_dim=128):
+    def __init__(self, input_dim, encoding_dim=128):
         super(VariationalAutoencoder, self).__init__()
 
         self.model_structure = 'linear'
         self.model_variant = 'vae'
 
         # Encoder
-        self.enc1 = nn.Linear(3 * 64 * 64, 512)
+        self.enc1 = nn.Linear(input_dim, 512)
         self.enc2 = nn.Linear(512, 256)
         self.enc3 = nn.Linear(256, encoding_dim)
 
@@ -23,7 +22,7 @@ class VariationalAutoencoder(nn.Module):
         self.dec1 = nn.Linear(encoding_dim, encoding_dim)
         self.dec2 = nn.Linear(encoding_dim, 256)
         self.dec3 = nn.Linear(256, 512)
-        self.dec4 = nn.Linear(512, 3 * 64 * 64)
+        self.dec4 = nn.Linear(512, input_dim)
 
     def reparameterize(self, mu, log_var):
         std = torch.exp(0.5 * log_var)
