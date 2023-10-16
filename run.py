@@ -29,7 +29,7 @@ def get_model_by_type(ae_type=None, input_dim=None, encoding_dim=None, device=No
         'ae': lambda: Autoencoder(input_dim, encoding_dim),
         'dae': lambda: DenoisingAutoencoder(input_dim, encoding_dim),
         'sparse': lambda: SparseAutoencoder(input_dim, encoding_dim),
-        'vae': VariationalAutoencoder,
+        'vae': lambda: VariationalAutoencoder(input_dim, encoding_dim),
         'conv': ConvolutionalAutoencoder,
         'conv_dae': DenoisingConvolutionalAutoencoder,
         'conv_vae': ConvolutionalVAE,
@@ -140,4 +140,4 @@ if __name__ == "__main__":
             print(f"\n===== Training {ae_type} =====\n")
             main(load_trained_model=False, ae_type=ae_type)
     else:
-        main(load_trained_model=False, num_epochs=100)
+        main(load_trained_model=False)
